@@ -12,8 +12,7 @@
 
 ## Model:
 
-![这是图片](/Figure/Model.png)
-
+![](https://raw.githubusercontent.com/lxdgogogo/TAGAD/master/Figure/model.png)
 
 ***
 
