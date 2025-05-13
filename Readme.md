@@ -10,6 +10,11 @@
 - Numpy
 
 
+## Model:
+
+![这是图片](/Figure/Model.png)
+
+
 ***
 
 ## Dataset
