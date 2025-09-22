@@ -18,18 +18,18 @@
 
 ## Dataset
 
-The datasets are in the "datasets" folder.First unzip these datasets.
+The datasets are in the "datasets" folder. First, unzip these datasets.
 
 ***
 
-## Hwo to run
+## How to run
 
 Global module:
 
 ```
 cd Global
 
-python main.py --dataset cora --epoch 200 --lr 5e-3 \ 
+python main.py --dataset cora --epoch 200 --lr 5e-3 \
 --dropout 0.6 --batch_size 10000 --num_layers 1 --patience 5\
 --weight_decay 5e-4 --device cuda
 ```
