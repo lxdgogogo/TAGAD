@@ -3,7 +3,6 @@ import numpy as np
 import torch.nn as nn
 import torch
 from sklearn.metrics import roc_auc_score
-from transformers import AutoModel
 import torch.nn.functional as F
 from GNN.gcn import GCN
 from utils.functions import create_activation, create_norm
@@ -11,7 +10,7 @@ from torch.utils.data import DataLoader
 
 
 class AnomalyClip(nn.Module):
-    def __init__(self, input_size, last_hidden_size, hidden_size, num_layers, dropout, norm, activation, device):
+    def __init__(self, input_size, last_hidden_size, hidden_size, num_layers, dropout, norm, activation, alpha, device):
         super().__init__()
         self.language_size = last_hidden_size
         self.encoder = GCN(in_dim=input_size, num_hidden=hidden_size, out_dim=hidden_size,
@@ -21,8 +20,9 @@ class AnomalyClip(nn.Module):
                            num_layers=num_layers, dropout=dropout, activation=create_activation(activation),
                            norm=create_norm(norm, hidden_size))
         self.device = device
-        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+        self.logit_scale = torch.ones([]) * torch.log(torch.tensor(1 / 0.07))
         self.text_projection = nn.Linear(self.language_size, hidden_size)
+        self.alpha = alpha
 
     def encode_gnn(self, graph, x: torch.Tensor):
         emb = self.encoder(graph, x)
@@ -53,7 +53,8 @@ class AnomalyClip(nn.Module):
             if pre:
                 loss = loss_clip
             else:
-                loss = loss_anomaly + 0.5 * loss_clip
+                loss = (1 - self.alpha) * loss_anomaly + self.alpha * loss_clip
+                # loss = loss_clip
             score[batch] = (loss - torch.min(loss)) / (torch.max(loss) - torch.min(loss))
             loss_sum += loss.sum()
         return score, loss_sum

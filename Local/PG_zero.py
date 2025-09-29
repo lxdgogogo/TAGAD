@@ -6,7 +6,7 @@ from dgl.dataloading import MultiLayerFullNeighborSampler, NeighborSampler
 
 
 class PG:
-    def __init__(self, feature, text_embedding, epsilon: float, alpha, walk=-1, device="cuda"):
+    def __init__(self, feature, text_embedding, epsilon: float, device="cuda"):
         self.feature = F.normalize(feature, p=2, dim=1)
         norm_x = torch.norm(text_embedding, p=2, dim=1, keepdim=True)
         text_embedding = text_embedding / norm_x
@@ -14,8 +14,6 @@ class PG:
         self.embedding = text_embedding
         # self.sim = (sim >= epsilon).to(torch.int)
         self.epsilon = epsilon
-        self.alpha = alpha
-        self.walk = walk
         self.device = device
 
     def s_diff(self, ego_adj, sim_sub):
@@ -33,11 +31,7 @@ class PG:
 
     def cal_score(self, graph: dgl.DGLGraph):
         score = torch.empty(graph.num_nodes(), device=self.device)
-        if self.walk == -1:
-            sampler = MultiLayerFullNeighborSampler(1)
-        else:
-            sampler = NeighborSampler([self.walk])
-        # sampler = MultiLayerFullNeighborSampler(1)
+        sampler = MultiLayerFullNeighborSampler(1)
         for node in graph.nodes():
             idx, _, blocks = sampler.sample(graph, node)
             idx_batch = torch.sort(idx)[0].to(self.device)
@@ -51,7 +45,7 @@ class PG:
             edges_adj[edges_ego[0], edges_ego[1]] = 1
             s_diff = self.s_diff(edges_adj, sim)
             f_diff = self.f_diff(self.feature[idx_batch], self.embedding[idx_batch])
-            score[node] = s_diff + self.alpha * f_diff
+            score[node] =  s_diff + f_diff
             # score[node] = s_diff
             torch.cuda.empty_cache()
         return score
